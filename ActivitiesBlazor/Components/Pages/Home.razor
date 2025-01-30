@@ -1,0 +1,119 @@
+﻿@page "/"
+@inject HttpClient Http
+@using activitiesLibrary:
+
+<h3>Courses</h3>
+
+@if (courses == null)
+{
+    <p><em>Error loading courses.</em></p>
+}
+else if (courses.Count == 0)
+{
+    <p>No courses available.</p>
+}
+else
+{
+    <div class="courses_container">
+        @foreach (var course in courses)
+        {
+            <button class="course_button" @onclick="@(() => OpenCourse(course))">
+                <p>@course.name</p>
+            </button>
+        }
+    </div>
+}
+@if (selectedCourse != null)
+{
+    <div class="modal" >
+        <div class="modal_content">
+            <span class="close" @onclick="CloseModal">&times;</span>
+            <div class="modal-body">
+                <h2>@selectedCourse.name</h2>
+                <p>Course details go here...</p>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    /* Style the courses container */
+    .courses_container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .course_button {
+        border: none;
+        background-color: transparent;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    /* Style the modal container */
+    .modal {
+     
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 150%;
+        height: 60%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+    }
+
+    .modal_content {
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        width: 80%; /* Increase the width to make it wider */
+        height: 40%; /* Reduce the height to make it shorter */
+ 
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        overflow-y: auto;
+    }
+
+        .modal_content.wide {
+            width: 90%; /* Make it wider */
+            height: 50%; /* Adjust height if necessary */
+            transition: width 0.3s ease-in-out, height 0.3s ease-in-out; /* Smooth transition */
+        }
+
+    .modal-body {
+        display: flex;
+        gap: 20px;
+    }
+    z
+    .close {
+        font-size: 33px;
+        font-weight: bold;
+        color: #FF0000;
+        float: right;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    private List<Course>? courses = null;
+    private Course? selectedCourse = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        courses = await Http.GetFromJsonAsync<List<Course>>("https://localhost:7250/api/Courses");
+    }
+
+    private void OpenCourse(Course course)
+    {
+        selectedCourse = null;
+        selectedCourse = course;
+    }
+
+    private void CloseModal()
+    {
+        selectedCourse = null;
+    }
+}

@@ -1,0 +1,65 @@
+﻿@page "/signup"
+
+@using activitiesLibrary
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer //כך הכפתור עובד
+
+<h3>Sign Up</h3>
+
+<div style="max-width: 300px; margin: 0 auto;">
+    <div style="margin-bottom: 15px;">
+        <label for="firstName">First Name:</label>
+        <input id="firstName" @bind="signUpRequest.FirstName" type="text" style="width: 100%; padding: 5px; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label for="lastName">Last Name:</label>
+        <input id="lastName" @bind="signUpRequest.LastName" type="text" style="width: 100%; padding: 5px; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label for="email">Email:</label>
+        <input id="email" @bind="signUpRequest.Email" type="email" style="width: 100%; padding: 5px; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label for="password">Password:</label>
+        <input id="password" @bind="signUpRequest.Password" type="password" style="width: 100%; padding: 5px; box-sizing: border-box;" />
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label for="age">Age:</label>
+        <input id="age" @bind="signUpRequest.Age" type="number" style="width: 100%; padding: 5px; box-sizing: border-box;" />
+    </div>
+    <button class="btn btn-primary" @onclick="RegisterUser" style="background-color: #f8b1d2; color: white; width: 100%; padding: 10px;">Sign Up</button>
+</div>
+
+<p>@Message</p>
+
+@code {
+    private signUpRequest signUpRequest = new signUpRequest();
+    private string Message { get; set; } = string.Empty;
+
+    private async Task RegisterUser()
+    {
+        Console.Write("hello");
+        try
+        {
+            // Send the SignUpRequest object to your API
+            var response = await HttpClient.PostAsJsonAsync("https://localhost:7250/api/SignUp", signUpRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Message = "Registration successful! Redirecting to login...";
+                await Task.Delay(2000); // Small delay before redirect
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Message = $"Registration failed: {error}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error: {ex.Message}";
+        }
+    }
+}

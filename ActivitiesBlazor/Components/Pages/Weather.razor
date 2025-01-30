@@ -1,0 +1,178 @@
+﻿@page "/weather"
+@using ActivitiesApi.Services
+@inject HttpClient Http
+@rendermode InteractiveServer
+
+<h3 style="color: #f8b1d2; font-family: 'Arial', sans-serif;">Courses</h3>
+
+@if (courses == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (courses.Count == 0)
+{
+    <p>No courses available.</p>
+}
+else
+{
+    <div class="courses-grid">
+        @foreach (var course in courses)
+        {
+            <div class="course-item" style="border: 1px solid #f8b1d2; background-color: #f9e0e7;">
+                <img src="@course.image_url" alt="@course.name" class="course-image" @onclick="() => OpenCourse(course)" />
+                <p style="color: #f8b1d2; font-family: 'Arial', sans-serif; font-weight: bold;">@course.name</p>
+            </div>
+        }
+    </div>
+}
+
+@if (showCourseModal && selectedCourse != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content" style="border: 2px solid #f8b1d2;">
+            <span class="modal-close" @onclick="CloseModal">&times;</span>
+            <h2>@selectedCourse.name</h2>
+            <p><strong>Duration:</strong> @selectedCourse.course_duration minutes</p>
+            <p><strong>Category:</strong> @selectedCourse.category_id</p>
+
+            @if (selectedTeacher != null)
+            {
+                <img src="@selectedTeacher.teacher_url" alt="Teacher" class="teacher-image" @onclick="OpenTeacherModal" />
+                <p><strong>Teacher:</strong> @selectedTeacher.name</p>
+            }
+        </div>
+    </div>
+}
+
+@if (showTeacherModal && selectedTeacher != null)
+{
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <span class="modal-close" @onclick="CloseTeacherModal">&times;</span>
+            <h2>@selectedTeacher.name</h2>
+            <img src="@selectedTeacher.teacher_url" alt="Teacher Image" class="modal-image" />
+            <p>@selectedTeacher.description</p>
+        </div>
+    </div>
+}
+
+<style>
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .course-item {
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        transition: transform 0.3s;
+    }
+
+        .course-item:hover {
+            transform: scale(1.05);
+        }
+
+    .course-image {
+        width: 100%;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .teacher-image {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin: 10px auto;
+        cursor: pointer;
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        text-align: center;
+    }
+
+    .modal-close {
+        float: right;
+        cursor: pointer;
+        color: red;
+    }
+
+    .modal-image {
+        max-width: 100%;
+        border-radius: 10px;
+    }
+</style>
+
+@code {
+    private List<Course> courses = new();
+    private Course? selectedCourse;
+    private Teacher? selectedTeacher;
+    private bool showCourseModal = false;
+    private bool showTeacherModal = false;
+
+    private List<Teacher> teachers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        courses = await Http.GetFromJsonAsync<List<Course>>("https://localhost:7250/api/Courses");
+        teachers = await Http.GetFromJsonAsync<List<Teacher>>("https://localhost:7250/api/Teachers");
+    }
+
+    private void OpenCourse(Course course)
+    {
+        selectedCourse = course;
+        selectedTeacher = teachers.FirstOrDefault(t => t.teacher_id == course.teacher_id);
+        showCourseModal = true;
+    }
+
+    private void OpenTeacherModal()
+    {
+        showTeacherModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showCourseModal = false;
+    }
+
+    private void CloseTeacherModal()
+    {
+        showTeacherModal = false;
+    }
+
+    public class Course
+    {
+        public int? course_id { get; set; }
+        public string? name { get; set; }
+        public int? teacher_id { get; set; }
+        public int? course_duration { get; set; }
+        public string? image_url { get; set; }
+        public int? category_id { get; set; }
+    }
+
+    public class Teacher
+    {
+        public int? teacher_id { get; set; }
+        public string? name { get; set; }
+        public string? teacher_url { get; set; }
+        public string? description { get; set; }
+    }
+}
